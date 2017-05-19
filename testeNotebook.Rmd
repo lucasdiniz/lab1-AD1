@@ -1,0 +1,39 @@
+---
+title: "AD1 - Lucas Diniz"
+output: html_notebook
+---
+
+Leitura dos Dados
+```{r}
+library('ggplot2')
+library('tidyr')
+library('dplyr')
+library('readr')
+
+series = read_csv(file = "dados/series_from_imdb.csv") %>% 
+  select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
+  filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>%
+  group_by(series_name)
+
+```
+
+Evolução temporal de Sense 8
+
+
+```{r}
+
+sense8 = series %>% filter(series_name == "Sense8")
+ggplot(sense8, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
+```
+
+House of cards
+
+```{r}
+house = series %>% filter(series_name == "House of Cards")
+ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
+```
+
+
+
+
+
