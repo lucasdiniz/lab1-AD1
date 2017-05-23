@@ -10,10 +10,48 @@ library('tidyr')
 library('dplyr')
 library('readr')
 
+View(read_csv(file = "dados/series_from_imdb.csv") )
+
+series2 = read_csv(file = "dados/series_from_imdb.csv") %>%
+  select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
+  filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>% 
+  group_by(series_name) %>%
+  summarise(mean_rank = mean(row_number()), sd_rank = IQR(row_number()))
+  
+  
+  
+  #top_n(20, UserRating)
+
+View(series2)
+
+################### LINKS UTEIS ###################
+
+#https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
+#https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf
+
+ ##################################################
+
+#ordenar pela rating e analisar o ranking medio de cada serie (RANKING MEDIO https://answers.yahoo.com/question/index?qid=20080313013018AAThuhs)
+#resposta ficando mais complicada = pergunta complicada
+
+################### PERGUNTAS ###################
+# 1 - Considerando a classificação no IMDB de todos os episódios das séries escolhidas, quais delas tem o melhor ranking medio?
+
+# 2 - 
+
+
+#distribuicao dos "melhores episodios" de acordo com o ep da temporada (EXISTE UMA TENDENCIA DOS EPISODIOS FICAREM MELHORES NOS FINAIS DAS TEMPORADAS?)
+#QUAL SERIE TEM MAIS EPISODIOS NO TOP 10? (METRICA NAO MUITO BOA)
+#Eliminar avaliacoes de RATING MAIS BAIXO (QUAL A SERIE MAIS BEM AVALIADA CONSIDERANDO APENAS USUARIOS que deram r3 ou mais?)
+#mostrar o maximo e o minimo rating de cada series e desvio padrao e media e mediana
+
+
 series = read_csv(file = "dados/series_from_imdb.csv") %>% 
   select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
   filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>%
   group_by(series_name)
+
+View(series)
 
 ```
 
@@ -30,7 +68,7 @@ House of cards
 
 ```{r}
 house = series %>% filter(series_name == "House of Cards")
-ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
+ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line(width = 5)
 ```
 
 
