@@ -3,74 +3,42 @@ title: "AD1 - Lucas Diniz"
 output: html_notebook
 ---
 
-Leitura dos Dados
+### Leitura dos Dados
 ```{r}
-library('ggplot2')
-library('tidyr')
-library('dplyr')
-library('readr')
-
-View(read_csv(file = "dados/series_from_imdb.csv") )
-
-series2 = read_csv(file = "dados/series_from_imdb.csv") %>%
-  select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
-  filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>% 
-  group_by(series_name) %>%
-  summarise(mean_rank = mean(row_number()), sd_rank = IQR(row_number()))
-  
-  
-  
-  #top_n(20, UserRating)
-
-View(series2)
-
-################### LINKS UTEIS ###################
-
-#https://www.nexojornal.com.br/  MATERIAS GRAFICAS
-#https://www.nexojornal.com.br/grafico/2017/05/22/Quanto-dinheiro-a-loteria-arrecada-para-onde-ele-vai-e-qual-a-chance-de-ganhar
-#https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
-#https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf
-
- ##################################################
-
-#ordenar pela rating e analisar o ranking medio de cada serie (RANKING MEDIO https://answers.yahoo.com/question/index?qid=20080313013018AAThuhs)
-#resposta ficando mais complicada = pergunta complicada
-
-################### PERGUNTAS ###################
-# 1 - Considerando a classificação no IMDB de todos os episódios das séries escolhidas, quais delas tem o melhor ranking medio?
-
-# 2 - 
-
-
-#distribuicao dos "melhores episodios" de acordo com o ep da temporada (EXISTE UMA TENDENCIA DOS EPISODIOS FICAREM MELHORES NOS FINAIS DAS TEMPORADAS?)
-#QUAL SERIE TEM MAIS EPISODIOS NO TOP 10? (METRICA NAO MUITO BOA)
-#Eliminar avaliacoes de RATING MAIS BAIXO (QUAL A SERIE MAIS BEM AVALIADA CONSIDERANDO APENAS USUARIOS que deram r3 ou mais?)
-#mostrar o maximo e o minimo rating de cada series e desvio padrao e media e mediana
-
+library('tidyverse')
 
 series = read_csv(file = "dados/series_from_imdb.csv") %>% 
   select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
   filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>%
   group_by(series_name)
 
-View(series)
-
 ```
 
-Evolução temporal de Sense 8
 
+#### __Pergunta 1:__ Qual das séries escolhidas é a mais "constante"? (Ou seja, a qualidade de seus episódios varia menos.)  
+
+Para responder essa pergunta, vamos observar a evolução do *rating* dos episódios ao longo do tempo em cada temporada.
+
+
+##### __Evolução temporal de Sense 8__  
 
 ```{r}
 
-sense8 = series %>% filter(series_name == "Sense8")
-ggplot(sense8, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
+bestAndWorst = series %>% filter(series_name == "Sense8")  %>% group_by(season) %>% summarise(best = max(UserRating), worst = min(UserRating))
+
+sense8 = series %>% filter(series_name == "Sense8")  %>% group_by(season)
+
+View(sense8)
+View(bestAndWorst)
+
+ggplot(sense8, aes(sense8$season_ep, sense8$UserRating, col = factor(season))) + geom_point() + geom_line() + labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Temporada') 
 ```
 
 House of cards
 
 ```{r}
 house = series %>% filter(series_name == "House of Cards")
-ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line(width = 5)
+ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
 ```
 
 
