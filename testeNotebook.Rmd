@@ -1,47 +1,234 @@
 ---
-title: "AD1 - Lucas Diniz"
+title: "AD1 - LAB1 - Lucas Diniz"
 output: html_notebook
 ---
 
-### Leitura dos Dados
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library('tidyverse')
+
 
 series = read_csv(file = "dados/series_from_imdb.csv") %>% 
   select(series_name, series_ep, season, season_ep, Episode, UserRating, UserVotes) %>% 
-  filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "House of Cards", "Stranger Things")) %>%
-  group_by(series_name)
+  filter(series_name %in% c("Black Mirror", "13 Reasons Why", "Sense8", "Stranger Things")) %>% group_by(series_name)
 
 ```
 
 
-#### __Pergunta 1:__ Qual das séries escolhidas é a mais "constante"? (Ou seja, a qualidade de seus episódios varia menos.)  
+ Para responder as perguntas abaixo precisaremos apenas de alguns dos dados que temos disponíveis sobre as séries, os mais essenciais para as visualizações e interpretações aqui apresentadas são:
+  
+  1 - _season_: Variável numérica discreta que representa o número da temporada da série em questão. No nosso caso esta assume apenas os valores 1, 2 e 3. Uma vez que nenhuma das séries analisadas possui mais de três temporadas.
+  
+  2 - _UserRating_: Variável numérica contínua que representa a pontuação de um episódio obtida através das avaliações dos usuários. Pode assumir valores entre 0 e 10.
+  
+  3 - season_ep: Variável numérica discreta que representa o número do episódio referente a uma certa temporada. Pode assumir valores a partir de 1 até o número de episódios da temporada. (Creio que seja seguro afirmar que esse valor dificilmente passará de 30 pra qualquer série)
 
-Para responder essa pergunta, vamos observar a evolução do *rating* dos episódios ao longo do tempo em cada temporada.
+
+## __Pergunta 1:__ Qual das séries escolhidas é a mais "constante"? (Ou seja, a qualidade de seus episódios varia menos)  
+
+  Para responder essa pergunta, vamos observar a evolução do *rating* dos episódios ao longo dos episodios de cada temporada. E utilizando métricas de agrupamento dos dados (tais como distância inter-quartil e desvio padrão) poderemos achar a resposta, uma vez que é esperado que uma série com qualidade mais constante tenha notas bem próximas para os seus episódios. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+sense8 = 
+  series %>% 
+  filter(series_name == "Sense8") %>% 
+  mutate(color = (min(UserRating) == UserRating | max(UserRating) == UserRating))
+
+ggplot(sense8, aes(sense8$season_ep, sense8$UserRating)) + geom_line(aes(color = factor(season))) +
+  
+  ggtitle("Evolução temporal de Sense 8") + 
+  
+  theme(plot.title = element_text(lineheight=.8, face="bold")) +
+  
+  labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Legenda') +  
+  
+  geom_point(aes(color = color)) + 
+  
+  scale_color_manual(labels = c("Temporada 1", "Temporada 2", "Episódios", "Melhor e pior episódio"),values = c("blue","green", "black", "red")) +
+  
+  geom_text(data = subset(sense8, sense8$UserRating == max(sense8$UserRating) | sense8$UserRating == min(sense8$UserRating)), aes(season_ep, UserRating,label = sprintf("%s - %.2f", Episode, UserRating)), hjust = 0.4, vjust = -1, size = 3,position = position_dodge(width = 1)) +
+  
+  xlim(c(-1, 3 + max(sense8$season_ep))) + 
+  
+  ylim(c(7, 10))
+
+ sprintf("Desvio Padrão = %.3f e Distância inter-quartil = %.3f", sd(sense8$UserRating), IQR(sense8$UserRating))
 
 
-##### __Evolução temporal de Sense 8__  
-
-```{r}
-
-bestAndWorst = series %>% filter(series_name == "Sense8")  %>% group_by(season) %>% summarise(best = max(UserRating), worst = min(UserRating))
-
-sense8 = series %>% filter(series_name == "Sense8")  %>% group_by(season)
-
-View(sense8)
-View(bestAndWorst)
-
-ggplot(sense8, aes(sense8$season_ep, sense8$UserRating, col = factor(season))) + geom_point() + geom_line() + labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Temporada') 
 ```
 
-House of cards
 
-```{r}
-house = series %>% filter(series_name == "House of Cards")
-ggplot(house, aes(x = `season_ep`, y = `UserRating`, color = factor(season))) + geom_point() + geom_line()
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+stranger = 
+  series %>% 
+  filter(series_name == "Stranger Things") %>% 
+  mutate(color = (min(UserRating) == UserRating | max(UserRating) == UserRating))
+
+ggplot(stranger, aes(stranger$season_ep, stranger$UserRating)) + geom_line() +
+  
+  ggtitle("Evolução temporal de Stranger Things") + 
+  
+  theme(plot.title = element_text(lineheight=.8, face="bold")) +
+  
+  labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Legenda') +  
+  
+  geom_point(aes(color = color)) + 
+  
+  scale_color_manual(labels = c("Episódios", "Melhor e pior episódio"),values = c("blue","red")) +
+  
+  geom_text(data = subset(stranger, stranger$UserRating == max(stranger$UserRating) | stranger$UserRating == min(stranger$UserRating)), aes(season_ep, UserRating,label = sprintf("%s - %.2f", Episode, UserRating)), hjust = 0.4, vjust = 2, size = 3,position = position_dodge(width = 1)) +
+  
+  xlim(c(-1, 3 + max(stranger$season_ep))) + 
+  
+  ylim(c(8, 10))
+
+  sprintf("Desvio Padrão = %.3f e Distância inter-quartil = %.3f", sd(stranger$UserRating), IQR(stranger$UserRating))
+
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+blackMirror = 
+  series %>% 
+  filter(series_name == "Black Mirror") %>%
+  mutate(color = (min(UserRating) == UserRating | max(UserRating) == UserRating))
+
+ggplot(blackMirror, aes(blackMirror$season_ep, blackMirror$UserRating)) + geom_line(aes(color = factor(season))) +
+  
+  ggtitle("Evolução temporal de Black Mirror") + 
+  
+  theme(plot.title = element_text(lineheight=.8, face="bold")) +
+  
+  labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Legenda') +  
+  
+  geom_point(aes(color = color)) + 
+  
+  scale_color_manual(labels = c("Temporada 1", "Temporada 2", "Temporada 3", "Episodios", "Melhor e pior episódio"),values = c("blue", "purple", "yellow", "black", "red")) +
+  
+  geom_text(data = subset(blackMirror, blackMirror$UserRating == max(blackMirror$UserRating) | blackMirror$UserRating == min(blackMirror$UserRating)), aes(season_ep, UserRating,label = sprintf("%s - %.2f", Episode, UserRating)), hjust = 0.4, vjust = 2, size = 3,position = position_dodge(width = 1)) +
+  
+  xlim(c(-1, 7)) + 
+  
+  ylim(c(6, 10))
+
+  sprintf("Desvio Padrão = %.3f e Distância inter-quartil = %.3f", sd(blackMirror$UserRating), IQR(blackMirror$UserRating))
+
 ```
 
 
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+reason = 
+  series %>% 
+  filter(series_name == "13 Reasons Why") %>% 
+  mutate(color = (min(UserRating) == UserRating | max(UserRating) == UserRating))
+
+ggplot(reason, aes(reason$season_ep, reason$UserRating)) + geom_line() +
+  
+  ggtitle("Evolução temporal de 13 Reasons Why") + 
+  
+  theme(plot.title = element_text(lineheight=.8, face="bold")) +
+  
+  labs(x = 'Episódio da temporada', y = 'Rating dos usuários', color = 'Legenda') +  
+  
+  geom_point(aes(color = color)) + 
+  
+  scale_color_manual(labels = c("Episódios", "Melhor e pior episódio"),values = c("blue","red")) +
+  
+  geom_text(data = subset(reason, reason$UserRating == max(reason$UserRating) | reason$UserRating == min(reason$UserRating)), aes(season_ep, UserRating,label = sprintf("%s - %.2f", Episode, UserRating)), hjust = 0.4, vjust = 2, size = 3,position = position_dodge(width = 1)) +
+  
+  xlim(c(-1, 3 + max(reason$season_ep))) + 
+  
+  ylim(c(8, 10))
+
+  sprintf("Desvio Padrão = %.3f e Distância inter-quartil = %.3f", sd(reason$UserRating), IQR(reason$UserRating))
+
+```
+#### Resposta para a pergunta 1:
+
+Basta olhar os gráficos para perceber que __Stranger Things__ é, de longe, a série que mantém a qualidade mais constante, com apenas __0.8__ pontos de diferença entre a classificação de seu melhor e de seu pior episódio, valor muito inferior às outras séries. Caso isso não seja convicente o suficiente, podemos checar as métricas de agrupamento e verificar que os valores obtidos para Stranger Things são praticamente a metade dos valores obtidos para as outras séries. Utilizando as mesmas visualizações e interpretações utilizadas para responder a pergunta 1, poderiamos também responder uma das outras perguntas propostas no checkpoint 3: __#Levando em consideração o melhor/pior episódio de cada série, qual seria a série mais "inconstante"? (Que a qualidade dos episódios mais varia.)__
+
+#### Resposta para a pergunta adicional:
+
+Temos Black Mirror, 13 Reasons Why e Sense 8 com resultados semelhantes nas métricas de agrupamento, entretanto, levando em consideração o melhor/pior episódio, __Sense 8__ é a série que apresenta a maior variação, com uma diferença de __2.2__ pontos entre o seu pior e o seu melhor episódio.
 
 
+## __Pergunta 2:__ Quais séries ficaram melhores ao longo das temporadas? 
+
+Utilizando as mesmas visualizações usadas na pergunta 1 seria possível concluir a olho nu que existe sim uma tendência dos episódios ficarem melhores nos finais das temporadas. Contudo, para ter certeza do que estamos vendo, podemos realizar um cálculo simples da média das notas dos episódios na primeira metade da temporada e comparar com a média dos episódios da metade final. Vale notar que mesmo que tenhamos valores extremos (muito inferiores ou muito superiores aos demais) que influenciem na média, o intuito é que esses valores de fato influenciem no resultado uma vez que queremos comparar as duas metades de cada temporada como um todo.
+
+
+####Sense 8
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+sense8 = series %>% filter(series_name == 'Sense8') %>% group_by(season)
+
+
+first_half <- sense8 %>% filter(season_ep <= max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+end_half <- sense8 %>% filter(season_ep > max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+
+sprintf("Media da primeira metade da temporada 1 de Sense 8: %.2f \nMedia da segunda metade da temporada 1 de Sense 8: %.2f" , first_half[1,-1], end_half[1,-1])
+
+sprintf("Media da primeira metade da temporada 2 de Sense 8: %.2f \nMedia da segunda metade da temporada 2 de Sense 8: %.2f" , first_half[2,-1], end_half[2, -1])
+
+```
+
+
+####Stranger Things
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+stranger = series %>% filter(series_name == 'Stranger Things')
+
+
+first_half <- stranger %>% filter(season_ep <= max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+end_half <- stranger %>% filter(season_ep > max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+sprintf("Media da primeira metade da temporada 1 de Stranger Things: %.2f \nMedia da segunda metade da temporada 1 de Stranger Things: %.2f" , first_half[1,-1], end_half[1,-1])
+
+```
+
+
+####Black Mirror
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+black = series %>% filter(series_name == 'Black Mirror') %>% group_by(season)
+
+
+first_half <- black %>% filter(season_ep <= max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+end_half <- black %>% filter(season_ep > max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+sprintf("Media da primeira metade da temporada 1 de Black Mirror: %.2f \nMedia da segunda metade da temporada 1 de Black Mirror: %.2f" , first_half[1,-1], end_half[1,-1])
+
+sprintf("Media da primeira metade da temporada 2 de Black Mirror: %.2f \nMedia da segunda metade da temporada 2 de Black Mirror: %.2f" , first_half[2,-1], end_half[2,-1])
+
+sprintf("Media da primeira metade da temporada 3 de Black Mirror: %.2f \nMedia da segunda metade da temporada 3 de Black Mirror: %.2f" , first_half[3,-1], end_half[3,-1])
+```
+
+
+####13 Reasons Why
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+reason = series %>% filter(series_name == 'Black Mirror') 
+
+
+first_half <- reason %>% filter(season_ep <= max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+end_half <- reason %>% filter(season_ep > max(season_ep)/2) %>% summarise(media = mean(UserRating))
+
+sprintf("Media da primeira metade da temporada 1 de 13 Reasons Why: %.2f \nMedia da segunda metade da temporada 1 de 13 Reasons Why: %.2f" , first_half[1,-1], end_half[1,-1])
+
+```
+
+#### Resposta para a pergunta 2:
+  
+  Por fim, as médias descobertas apenas evidenciam o que já desconfiavamos antes, existem sim uma tendência das séries ficarem melhores no final das temporadas. __Nas séries aqui analisadas, todas elas ficaram melhores no final das temporadas__ houve apenas um caso na segunda temporada da série Black Mirror em que a metade final da série teve média menor que a metade inicial. Entretanto, esse é um caso especial pois a temporada possui apenas 4 episódios e na metade final desta mesma segunda temporada estão ambos o melhor e o pior episódios de toda a série. Portanto, este único caso que fugiu ao padrão não representa o todo, a maioria. Com os dados das médias obtidos anteriormente, seria possível ainda responder a pergunta adicional: __#Qual a melhor série dentre as escolhidas?__
+  
+  
+#### Resposta para a pergunta adicional:
+
+  Levando em consideração apenas a classificação média por temporada, __poderiamos concluir que Stranger Things apresenta a melhor média e portanto é a melhor série__. Contudo, os números mostram que, apesar de ter uma média geral menor, a segunda temporada de Sense8 consegue ser melhor que a única temporada de Stranger Things. Portanto, opinião e gosto pessoal também têm um peso importante nessa resposta.
+  
